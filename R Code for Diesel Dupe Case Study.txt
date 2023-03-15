@@ -1,0 +1,68 @@
+R Code: 
+
+#defining dates#
+start = "2014-01-01"
+treatment = "2015-09-01"
+end = "2015-12-31"
+#defining pre & post periods#
+pre.period = as.Date(c(start, treatment))
+post.period = as.Date(c(treatment, end))
+#loading relevant packages#
+install.packages("tseries")
+library(tseries)
+library(tidyverse)
+#retrieving historical finance data for Volswagen#
+Volkswagen = get.hist.quote(instrument = "VOW.DE", 
+                           start = start,
+                           end = end,
+                           quote = "Close",
+                           compression = "w")
+#Viewing Volswagen Data to Make Sure Importation Correct#
+View(Volkswagen)
+#data import of weekly stock price successful#
+#going to look at other stuff for controls#
+#social media/technology control#
+Twitter = get.hist.quote(instrument = "TWTR", 
+                           start = start,
+                           end = end,
+                           quote = "Close",
+                           compression = "w")
+#entertainment control#
+Disney = get.hist.quote(instrument = "DIS", 
+                           start = start,
+                           end = end,
+                           quote = "Close",
+                           compression = "w")
+#pharmaceutical control#
+Novartis = get.hist.quote(instrument = "NVS", 
+                           start = start,
+                           end = end,
+                           quote = "Close",
+                           compression = "w")
+#manufacturing control#
+Carlsberg = get.hist.quote(instrument = "CARL-B.CO", 
+                           start = start,
+                           end = end,
+                           quote = "Close",
+                           compression = "w")
+#combining all the stocks#
+stocks <- cbind(Volkswagen, Twitter, Disney, Carlsberg, Novartis)
+#checking if combination performed correctly#
+View(stocks)
+#making sure control groups are good enough through correlation checks#
+correlation <- window(stocks, start = start, end = treatment)
+cor(correlation)
+#Volkswagen not correlated with social media/technology group#
+#Volkswagen somewhat correlated with entertainment, pharmaceutical, and manufacturing controls#
+#going to drop Twitter from control#
+final_stocks <- cbind(Volkswagen, Disney, Carlsberg, Novartis)
+View(final_stocks)
+#causal impact analysis#
+install.packages("CausalImpact")
+library(CausalImpact)
+impact <- CausalImpact(data = final_stocks,
+                       pre.period = pre.period,
+                       post.period = post.period)
+#checking results#
+summary(impact)
+plot(impact)
